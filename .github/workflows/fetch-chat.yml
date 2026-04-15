@@ -23,6 +23,13 @@ permissions:
   contents: write
   pull-requests: write
 
+# Force the runner to use Node.js 24 for JavaScript-based actions even if the
+# action metadata still declares `node20`. Silences the `Node.js 20 actions are
+# deprecated` warning from GitHub until actions/checkout and actions/setup-python
+# publish Node.js 24 releases we can pin to.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
