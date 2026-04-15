@@ -3,9 +3,11 @@
 
 Output: examples/portfolio-300k-usd.pdf
 
-Source of truth for the numbers — examples/portfolio-300k-usd.md (the synthesis
-document from the channel's philosophy). This script is a presentation helper
-only; it does not re-derive weights.
+Version 2 — Spanish tax residency, EUR expense currency, 5-year horizon,
+quarterly $25k contributions, crypto allowed. All instruments are UCITS
+(Ireland-domiciled) Acc share classes tradeable on EU exchanges so the
+portfolio is legally accessible to a Spanish retail investor and avoids
+the PRIIPs wall on US-domiciled ETFs.
 """
 from pathlib import Path
 
@@ -42,54 +44,55 @@ for name, path in FONT_CANDIDATES:
 # --- allocation data ---------------------------------------------------------
 # (block, instrument, pct, usd, rationale)
 # Totals per block row have instrument=None.
+# All instruments are UCITS Acc on EU exchanges (Spanish retail accessible).
 ROWS = [
-    ("Глобальные акции", None,          "50%", "$150 000",
-     "Долгосрочный генератор доходности"),
-    ("",                 "VTI — US broad",            "18%", "$54 000",
-     "chat:message2489 — недовес США vs капвесу"),
-    ("",                 "VEA — Developed ex-US",     "18%", "$54 000",
+    ("Глобальные акции", None,          "45%", "$135 000",
+     "5y горизонт → скромнее 50%"),
+    ("",                 "CSPX — S&P 500 UCITS Acc (IE00B5BMR087)",          "17%", "$51 000",
+     "chat:message2489 — США в недовесе"),
+    ("",                 "EXUS — MSCI World ex-US UCITS Acc (IE00BKBF6H24)", "17%", "$51 000",
      "chat:message2405 — разворот Европы"),
-    ("",                 "VWO — Emerging markets",    "8%",  "$24 000",
+    ("",                 "EMIM — MSCI EM IMI UCITS Acc (IE00BKM4GZ66)",      "7%",  "$21 000",
      "chat:message2489 — VEU/SPY пробой"),
-    ("",                 "MTUM — US momentum",        "6%",  "$18 000",
+    ("",                 "IWMO — MSCI World Momentum UCITS Acc (IE00BP3QZ825)", "4%",  "$12 000",
      "chat:message97 — факторный оверлей"),
 
-    ("Короткие облигации", None,        "15%", "$45 000",
-     "Подушка риска, только короткая дюрация"),
-    ("",                 "BSV — short US IG/Treas",   "10%", "$30 000",
-     "chat:message2414 — длинные Трежерис не берём"),
-    ("",                 "BNDX — int'l IG short",     "5%",  "$15 000",
-     "Валютная диверсификация бонд-части"),
+    ("Облигации (EUR)",  None,          "22%", "$66 000",
+     "Валютный матчинг к расходам + короткая дюрация"),
+    ("",                 "VAGF — Global Agg Bond EUR Hedged Acc (IE00BG47KH54)", "12%", "$36 000",
+     "chat:message2414 — без длинных Трежерис"),
+    ("",                 "IBGS — € Govt Bond 1-3yr Acc (IE00B3VTMJ91)",      "10%", "$30 000",
+     "EUR «подушка» для квартальных ребалансов"),
 
-    ("Драгметаллы",      None,          "18%", "$54 000",
+    ("Драгметаллы",      None,          "16%", "$48 000",
      "Структурная защитная корзина"),
-    ("",                 "GLD — gold",                "9%",  "$27 000",
+    ("",                 "SGLN — iShares Physical Gold ETC (IE00B4ND3602)",  "8%",  "$24 000",
      "chat:message56, chat:message2229"),
-    ("",                 "SLV — silver",              "4%",  "$12 000",
-     "Опережает золото на поздней фазе цикла"),
-    ("",                 "GDX — gold miners",         "2%",  "$6 000",
+    ("",                 "SSLN — iShares Physical Silver ETC (IE00B4NCWG09)", "3%",  "$9 000",
+     "Опережает золото на поздней фазе"),
+    ("",                 "GDGB — VanEck Gold Miners UCITS (IE00BQQP9F84)",   "2%",  "$6 000",
      "«Рычаг» к золоту"),
-    ("",                 "PALL — palladium",          "2%",  "$6 000",
+    ("",                 "PHPD — WisdomTree Palladium ETC (JE00B1VS3002)",   "2%",  "$6 000",
      "chat:message2453 — просыпается последним"),
-    ("",                 "PPLT — platinum",           "1%",  "$3 000",
+    ("",                 "PHPT — WisdomTree Platinum ETC (JE00B1VS2W53)",    "1%",  "$3 000",
      "chat:message56 — иная фундаменталка"),
 
-    ("Промсырьё / энергия", None,       "7%",  "$21 000",
+    ("Промсырьё / энергия", None,       "5%",  "$15 000",
      "Инфляционный хедж помимо драгов"),
-    ("",                 "COPX — copper miners",      "4%",  "$12 000",
+    ("",                 "COPG — Global X Copper Miners UCITS",              "3%",  "$9 000",
      "chat:message2414 — медь пробивает сопротивление"),
-    ("",                 "XLE — energy",              "3%",  "$9 000",
+    ("",                 "IUES — S&P 500 Energy Sector UCITS (IE00B42NKQ00)", "2%",  "$6 000",
      "chat:message2414 — «нефть я бы не хоронил»"),
 
-    ("Крипта",           None,          "5%",  "$15 000",
+    ("Крипта",           None,          "4%",  "$12 000",
      "Структурный тезис + инфляционный бенефициар"),
-    ("",                 "IBIT — spot BTC ETF",       "5%",  "$15 000",
+    ("",                 "BTCE — 21Shares Bitcoin Core ETP (XETRA)",         "4%",  "$12 000",
      "chat:message2227, chat:message2414"),
 
-    ("Кэш / money market", None,        "5%",  "$15 000",
-     "Пыль для ребалансировок"),
-    ("",                 "SGOV — short T-bills",      "5%",  "$15 000",
-     "≈ ставка ФРС, ликвидность"),
+    ("EUR кэш / MM",     None,          "8%",  "$24 000",
+     "Пыль для ребалансировок + буфер на квартальные взносы"),
+    ("",                 "XEON — EUR Overnight Rate Swap UCITS (LU0290358497)", "8%",  "$24 000",
+     "≈ ставка ЕЦБ, T+0"),
 ]
 
 TOTAL_ROW = ("ИТОГО", "", "100%", "$300 000", "")
@@ -169,7 +172,7 @@ def build_table():
         if cell:
             data[r][3] = Paragraph(cell, note_style)
 
-    col_widths = [78 * mm, 15 * mm, 22 * mm, 65 * mm]
+    col_widths = [92 * mm, 13 * mm, 20 * mm, 55 * mm]
     t = Table(data, colWidths=col_widths, repeatRows=1)
 
     style = TableStyle([
@@ -227,9 +230,11 @@ def build_pdf(output: Path):
     story = []
 
     story.append(Paragraph(
-        "Модельный портфель на $300 000", title_style))
+        "Модельный портфель на $300 000 · Испания / EUR / 5 лет", title_style))
     story.append(Paragraph(
-        "Синтез по философии канала «Капитал» (SGCapital) · данные корпуса по состоянию на 27 января 2026",
+        "Синтез по философии канала «Капитал» (SGCapital). Старт $300k, "
+        "квартальные пополнения $25k (20 взносов = +$500k). "
+        "Юрисдикция ES, валюта расходов EUR. Все инструменты — UCITS Acc на EU-биржах.",
         subtitle_style))
 
     story.append(Paragraph("Итоговая аллокация", h2_style))
@@ -237,46 +242,87 @@ def build_pdf(output: Path):
 
     story.append(Paragraph("Ключевые решения", h2_style))
     bullets = [
-        "<b>Equities 50%, внутри США меньше половины блока.</b> "
-        "Прямое следствие поста 27 января 2026 (chat:message2489): аллокация "
-        "иностранцев в акции США у исторических максимумов, VEU/SPY впервые "
-        "с 2011 тестирует 200-недельную.",
-        "<b>Драгметаллы 18% — осознанно много.</b> Структурный цикл из "
-        "chat:message2229 (январь 2024) в 2025 дал +170% по GDX/SIL и +38% "
-        "по PALL; выходить пока рано.",
-        "<b>Никаких длинных Трежерис.</b> chat:message2414 (июнь 2025): "
-        "«для долгосрочного портфеля не выглядят привлекательно». "
-        "Только короткая дюрация.",
-        "<b>Крипта через спотовый BTC-ETF.</b> Структурный тезис канала с "
-        "2017, валидированный институционализацией в январе 2024.",
-        "<b>Ребалансировка — раз в год либо при отклонении ≥5 п.п.</b> "
-        "Правило из chat:message559 (2018-09-04).",
+        "<b>Equities 45% (меньше обычного), внутри США ≈ 17%.</b> "
+        "Горизонт 5 лет короче канонических 10+, плюс аллокация иностранцев в "
+        "акции США у исторических максимумов (chat:message2489, январь 2026) — "
+        "снижаем концентрационный риск.",
+        "<b>Облигации 22%, всё в EUR.</b> VAGF (global aggregate EUR hedged) + "
+        "IBGS (€ govt 1-3yr). Длинных Трежерис нет (chat:message2414, июнь 2025). "
+        "Валютный матчинг к расходам убирает FX-риск при выводе в EUR.",
+        "<b>Драгметаллы 16% — осознанно много для 5y.</b> Структурный цикл из "
+        "chat:message2229 (янв 2024) в 2025 дал +170% по золотодобытчикам и +38% по "
+        "PALL; выходить пока рано, но блок чуть ужат против 10y-версии.",
+        "<b>Крипта 4% через BTCE (21Shares, XETRA).</b> Спотовые BTC-ETF в "
+        "US-форме (IBIT) физлицу в ES недоступны. BTCE — UCITS-ETP на физический BTC, "
+        "торгуется в EUR/USD на Deutsche Börse.",
+        "<b>Ребалансировка через пополнения, а не продажи.</b> Каждый квартал "
+        "$25k направляются в наиболее просевший vs целевой вес блок. "
+        "Это главный налоговый лайфхак для ES: продажи = CGT 19–28%, "
+        "докупки — нет. За 5 лет (20 кварталов) базу можно не тревожить.",
+        "<b>Жёсткая ребалансировка (с продажами) — раз в год либо при "
+        "отклонении ≥5 п.п.</b> Правило из chat:message559. Но только если "
+        "квартальных взносов не хватило выровнять дрифт.",
     ]
     for b in bullets:
         story.append(Paragraph("• " + b, body_style))
 
+    story.append(Paragraph("Под Испанию: налоговая гигиена", h2_style))
+    tax = [
+        "<b>Все ETF — Acc (накопление).</b> Дивиденды реинвестируются внутри "
+        "фонда → нет ежегодного taxable event по дивидендам, налог платится "
+        "только при продаже.",
+        "<b>Модело 720 / 721.</b> Если суммарная стоимость иностранных счетов "
+        "и криптоактивов превысит €50 000 по категориям — обязательная "
+        "декларация. С $300k старта порог перейдётся сразу, учесть при старте.",
+        "<b>Impuesto sobre el Patrimonio.</b> Region-specific; в "
+        "Мадриде/Андалусии эффективно 0% через bonificación, в Каталонии "
+        "и Балеарах есть; плюс федеральный ITSGF на крупные состояния.",
+        "<b>CGT-лестница 2026 (ES):</b> 19% до €6k, 21% €6–50k, 23% €50–200k, "
+        "27% €200–300k, 28% свыше €300k. Это вторая причина избегать продаж.",
+        "<b>BTC/крипта.</b> Выбран BTCE (securitized ETP), а не прямая "
+        "покупка BTC на бирже — так экспозиция сидит на брокерском счёте и "
+        "отчитывается через 720, а не через 721. Проще учёт.",
+    ]
+    for b in tax:
+        story.append(Paragraph("• " + b, body_style))
+
+    story.append(Paragraph("Логика квартальных взносов $25 000", h2_style))
+    dca = [
+        "Каждый квартал: посмотреть текущие веса блоков vs целевые в таблице выше.",
+        "Весь $25k распределить в блоки, которые <b>ниже</b> цели, пропорционально "
+        "размеру «дыры». Не продавать ничего.",
+        "Если все блоки в пределах ±2 п.п. от цели — распределить взнос по "
+        "целевым весам (фактически: 45% в акции, 22% в бонды и т.д.).",
+        "Один раз в год (например, в январе, до декларации) — зафиксировать "
+        "snapshot весов и свериться с правилом «5 п.п.» для ручного ребаланса.",
+    ]
+    for b in dca:
+        story.append(Paragraph("• " + b, body_style))
+
     story.append(Paragraph("Чего в портфеле НЕТ и почему", h2_style))
     not_in = [
-        "<b>RU-активов</b> — по CLAUDE.md §2.2 и отсутствию свежей рамки канала.",
+        "<b>US-domiciled ETF</b> (VTI, GLD, SLV, IBIT, BSV, SGOV...) — "
+        "PRIIPs не пускает retail в ES + 15% US WHT.",
         "<b>Длинных Трежерис</b> (TLT/EDV/ZROZ) — chat:message2414.",
         "<b>Хедж-фондов, структурных нот, ДУ с комиссией ≥1%</b> — "
         "chat:message5, chat:message121, chat:message131.",
-        "<b>Отдельных акций-хайпов</b> — chat:message154: 4% акций "
-        "создают почти всё богатство рынка, угадать их — лотерея.",
+        "<b>Отдельных акций-хайпов</b> — chat:message154.",
         "<b>Шортов/инверсных ETF</b> — не играем против тренда "
         "(chat:message2329, chat:message2467).",
+        "<b>RU-активов</b> — CLAUDE.md §2.2.",
     ]
     for b in not_in:
         story.append(Paragraph("• " + b, body_style))
 
     story.append(Paragraph(
-        "<b>Дисклеймер.</b> Это не инвестиционная рекомендация. Документ — "
-        "синтез явных высказываний канала «Капитал» со ссылками на "
-        "конкретные сообщения в tools/chat.jsonl. Сам канал в "
-        "chat:message860 подчёркивает: «аллокация активов для каждого "
-        "инвестора — дело очень индивидуальное». Решение — ваше. "
-        "Полный разбор с лесенкой входа, правилами ребалансировки и "
-        "списком точек пересмотра — в examples/portfolio-300k-usd.md.",
+        "<b>Дисклеймер.</b> Это не инвестиционная и не налоговая рекомендация. "
+        "Документ — синтез явных высказываний канала «Капитал» (ссылки "
+        "chat:messageNNN указывают на конкретные сообщения в tools/chat.jsonl) "
+        "плюс технические ограничения испанского розничного инвестора. "
+        "По Modelo 720/721 и Impuesto sobre el Patrimonio ОБЯЗАТЕЛЬНО "
+        "проверить с локальным gestor'ом — правила ежегодно меняются. "
+        "Сам канал в chat:message860 подчёркивает: «аллокация активов для "
+        "каждого инвестора — дело очень индивидуальное». Решение — ваше.",
         disclaimer_style))
 
     doc.build(story)
