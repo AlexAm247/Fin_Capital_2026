@@ -170,6 +170,15 @@ WIKI_TOPICS: list[tuple[str, str, list[str]]] = [
             "таргет инфляц", "ключев ставк", "ставка цб",
         ],
     ),
+    (
+        "forecasts",
+        "Прогнозы и итоги года",
+        [
+            "прогноз", "итог год", "итоги год", "итоги 20",
+            "базов сценари", "взгляд на 20", "взгляд вперед",
+            "outlook", "consensus",
+        ],
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -207,7 +216,14 @@ def build_sources(records: list[dict]) -> None:
         hits = [
             r
             for r in records
-            if tag_matches((r.get("text") or "") + " " + (r.get("media") or ""), keywords)
+            if tag_matches(
+                (r.get("text") or "")
+                + " "
+                + (r.get("media") or "")
+                + " "
+                + (r.get("media_description") or ""),
+                keywords,
+            )
         ]
         hits.sort(key=lambda r: (r["date"], r["time"], r["id"]))
         out = SOURCES / f"{slug}.md"
@@ -232,9 +248,20 @@ def build_sources(records: list[dict]) -> None:
                     current_year = year
                     lines.append(f"## {year}")
                     lines.append("")
-                hl = headline(r.get("text") or r.get("media") or "")
-                rel = f"../../{r['source']}#{r['msg_id']}"
-                lines.append(f"- **{r['date']}** `chat:{r['msg_id']}` — [{hl}]({rel})")
+                hl = headline(
+                    r.get("text")
+                    or r.get("media_description")
+                    or r.get("media")
+                    or ""
+                )
+                # Legacy HTML-export rows: link into the local frozen archive.
+                # New scraped rows: link to the public Telegram post.
+                msg_id = r.get("msg_id", "")
+                if msg_id.startswith("tg:"):
+                    rel = f"https://t.me/sgcapital/{msg_id[3:]}"
+                else:
+                    rel = f"../../{r['source']}#{msg_id}"
+                lines.append(f"- **{r['date']}** `chat:{msg_id}` — [{hl}]({rel})")
             lines.append("")
         out.write_text("\n".join(lines), encoding="utf-8")
         print(f"  sources: {out.relative_to(ROOT)} ({len(hits)} hits)")

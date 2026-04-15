@@ -4,6 +4,55 @@
 
 ---
 
+## 2026-04-15 — автоматизация ingest + forecast track record
+
+**Автор:** Claude (та же сессия, ветка `claude/migrate-telegram-chat-NRzed`).
+
+**Контекст.** После первого ingestion мы работали с корпусом как с «замороженным» документом: 1996 сообщений до 2026-04-14, дальше — тишина. Задача этой записи — поставить **автоматический догон** новых постов с публичного превью канала `t.me/s/sgcapital`, чтобы при любом новом заходе в репо корпус был актуален, и записать первое содержательное табло прогнозов канала.
+
+**Ключевое архитектурное решение.** После этого ingest'а `tools/chat.jsonl` **становится каноничным источником правды**. `messages*.html` — замороженный архив, не перегенерируется. В корпусе теперь сосуществуют две когорты записей:
+
+- **архивная** — `msg_id = messageN`, `source = messages*.html` (1996 штук);
+- **онлайн** — `msg_id = tg:<N>`, `source = t.me/s/sgcapital` (дописываются автоматикой).
+
+Все инструменты (`build_index.py`, `build_wiki.py`, будущие) умеют работать с обеими когортами одинаково.
+
+**Что сделано:**
+
+- Написан `tools/fetch_chat.py` — инкрементальный парсер `t.me/s/sgcapital`. Читает max `tg:<N>` из корпуса, парсит превью-страницу, для новых постов опционально прогоняет картинки через Claude Haiku 4.5 (`ANTHROPIC_API_KEY`) и дописывает JSONL-строки в `chat.jsonl`. Поддерживает `--dry-run`, `--limit`, `--before`. Парсер проверен на синтетическом HTML-фикстуре.
+- Добавлен `.github/workflows/fetch-chat.yml` — CI-воркфлоу: `cron 17 6 * * *` + `workflow_dispatch`. Запускает `fetch_chat.py`, проверяет `git diff tools/chat.jsonl`, при наличии изменений перезапускает `build_index.py` и `build_wiki.py`, открывает PR на `main` через `peter-evans/create-pull-request@v6` (ветка `bot/daily-ingest`, метки `automated`, `ingest`).
+- В `tools/build_index.py` и `tools/build_wiki.py` добавлено чтение нового поля `media_description` при матчинге ключевых слов — картинки, описанные моделью, теперь тоже тегируются.
+- В `tools/build_wiki.py` добавлена новая тема `forecasts` в `WIKI_TOPICS` — чтобы страница `forecast-track-record.md` имела свой автоген-сидекар.
+- `tools/build_wiki.py` теперь корректно генерирует ссылки для обеих когорт: `messageN` → `../../messages.html#...`, `tg:N` → `https://t.me/sgcapital/N`.
+- Написана `wiki/principles/forecast-track-record.md` — послужной список прогнозов канала за 2024–2025 с табло: 5 сбылись, 2 не сбылись, 1 частично, 1 рано судить. Там же методология и правило «строки не удалять».
+- `CLAUDE.md` обновлён: §1 описывает новую реальность с двумя когортами и заморозкой HTML, §3 документирует `fetch_chat.py` и воркфлоу, §5 отделяет авторизованные append'ы от ручных правок `chat.jsonl`.
+- Перегенерированы `wiki/_sources/*.md` (уже 16 файлов — добавился `forecasts.md`) и `wiki/index.md`.
+
+**Что требуется от человека, чтобы автоматика заработала полностью:**
+
+1. Смержить эту ветку в `main`, иначе GitHub Actions `cron` не начнёт тикать (schedule работает только с дефолтной ветки). `workflow_dispatch` — работает и из этой ветки.
+2. Положить `ANTHROPIC_API_KEY` в Secrets репозитория — без него картинки будут сохраняться как URL, без текстовых описаний.
+3. Проверить, что у GitHub Actions стоит разрешение «Allow GitHub Actions to create pull requests» (Settings → Actions → General), иначе `peter-evans/create-pull-request` получит 403.
+
+**Затронутые файлы (новые):**
+
+- `tools/fetch_chat.py`
+- `.github/workflows/fetch-chat.yml`
+- `wiki/principles/forecast-track-record.md`
+- `wiki/_sources/forecasts.md` (автоген)
+
+**Затронутые файлы (изменены):**
+
+- `CLAUDE.md`
+- `tools/build_index.py`
+- `tools/build_wiki.py`
+- `wiki/log.md` (эта запись)
+- `wiki/index.md` (автоген, обновление)
+
+**Что НЕ тронуто:** `messages*.html`, `tools/chat.jsonl` (сейчас ещё без новых строк — автоматика впервые дописывает в него в CI, не в этой сессии, чтобы коммит был строго про инфраструктуру), `tools/parse_chat.py`, `INDEX.md`.
+
+---
+
 ## 2026-04-15 — первый ingestion
 
 **Автор:** Claude (сессия на ветке `claude/migrate-telegram-chat-NRzed`).

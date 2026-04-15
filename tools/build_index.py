@@ -311,7 +311,13 @@ def main() -> None:
     untagged: list[dict] = []
 
     for r in records:
-        body = (r.get("text") or "") + " " + (r.get("media") or "")
+        body = (
+            (r.get("text") or "")
+            + " "
+            + (r.get("media") or "")
+            + " "
+            + (r.get("media_description") or "")
+        )
         tags = tag_message(body)
         theme_for[r["id"]] = tags
         if tags:
